@@ -12,7 +12,7 @@ description: >
 maintainer: vanhoof
 tier: community
 category: terminal
-requires_hermes: ">=0.23"
+requires_hermes: ">=0.22.2"
 platforms: [macos, linux]
 capabilities:
   provides_hooks: [on_session_start, on_session_reset, pre_llm_call, pre_tool_call, post_tool_call,
