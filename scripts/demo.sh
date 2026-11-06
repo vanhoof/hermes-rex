@@ -36,11 +36,11 @@ for x in recs:
   done
 fi
 
-KEEP=0; UI=hermes; ASK=1; SPLIT=1
+KEEP=0; UI=""; ASK=1; SPLIT=1
 for arg in "$@"; do
   case "$arg" in
     --keep) KEEP=1 ;;
-    --tui) UI="hermes --tui" ;;
+    --tui) UI="--tui" ;;
     --no-question) ASK=0 ;;
     --no-split) SPLIT=0 ;;
     -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
@@ -117,12 +117,16 @@ wait_for_prompt() {  # wait until the pane shows a prompt
 send() { rex block send -s "$REX_SESSION" -b "$1" "$2"; sleep 1; rex block send-key -s "$REX_SESSION" -b "$1" enter; }
 
 # --- open Hermes --------------------------------------------------------------------
-say "Opening Hermes ($UI) in a pane to the right"
-BLOCK=$(rex split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right --ratio 55 --label "hermes demo" --focus=false --keep-open --json -- $UI \
+# A pane opened by `rex split` starts from the login shell's environment, so launch the
+# very hermes found here and carry HERMES_HOME along (testers often point it at a throwaway home).
+HERMES_BIN=$(command -v hermes)
+LAUNCH=(env ${HERMES_HOME:+HERMES_HOME=$HERMES_HOME} "$HERMES_BIN" $UI)
+say "Opening Hermes (${HERMES_BIN}${UI:+ $UI}${HERMES_HOME:+, HERMES_HOME=$HERMES_HOME}) in a pane to the right"
+BLOCK=$(rex split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right --ratio 55 --label "hermes demo" --focus=false --keep-open --json -- "${LAUNCH[@]}" \
         | python3 -c 'import json,sys; print(json.load(sys.stdin)["block_ids"][0])') || { bad "could not open the pane"; exit 1; }
 ok "pane ${BLOCK#block:}"
 say "Opening a live status monitor below it"
-MON=$(rex split -s "$REX_SESSION" -b "$BLOCK" --split=below --ratio 30 --label "rex status" --focus=false --keep-open --json -- "$0" --monitor "$BLOCK" \
+MON=$(rex split -s "$REX_SESSION" -b "$BLOCK" --split=below --ratio 30 --label "rex status" --focus=false --keep-open --json -- bash "$(cd "$(dirname "$0")" && pwd)/$(basename "$0")" --monitor "$BLOCK" \
       | python3 -c 'import json,sys; print(json.load(sys.stdin)["block_ids"][0])') || MON=""
 [ -n "$MON" ] && ok "monitor pane ${MON#block:}" || bad "could not open the monitor pane (continuing)"
 cleanup() {

@@ -66,8 +66,9 @@ _MSG_LIMIT = 160
 _KINDS = {"approval": "permission", "sudo": "auth", "clarify": "question"}
 _HOME = os.path.dirname(os.path.abspath(__file__))
 _SKILL = os.path.join(_HOME, "skills", "rex", "SKILL.md")
-_BREADCRUMBS = os.path.expanduser("~/.hermes/terminal-sessions")
-_CONFIG = os.path.expanduser("~/.hermes/config.yaml")
+_HERMES_HOME = os.environ.get("HERMES_HOME") or os.path.expanduser("~/.hermes")
+_BREADCRUMBS = os.path.join(_HERMES_HOME, "terminal-sessions")
+_CONFIG = os.path.join(_HERMES_HOME, "config.yaml")
 _REX_ENV = ("REX_BLOCK", "REX_SESSION", "REX_SERVER", "REX_BIN_DIR")
 _TUI_MARKER = "ui-tui/dist/entry.js"
 _DEBUG = bool(os.environ.get("REX_PLUGIN_DEBUG"))
@@ -89,7 +90,7 @@ def _data_dir() -> str:
         from plugins.plugin_storage import plugin_data_dir
         return str(plugin_data_dir("rex"))
     except Exception:
-        path = os.path.expanduser("~/.hermes/plugin-data/rex")
+        path = os.path.join(_HERMES_HOME, "plugin-data", "rex")
         os.makedirs(path, exist_ok=True)
         return path
 
@@ -478,7 +479,7 @@ def _doctor_setup(parser) -> None:
     sub = parser.add_subparsers(dest="rex_cmd")
     doctor = sub.add_parser("doctor", help="Check that Hermes and Rex are wired up")
     doctor.add_argument("--fix", action="store_true",
-                        help="add terminal.client_env_passthrough for the Rex ids to ~/.hermes/config.yaml")
+                        help="add terminal.client_env_passthrough for the Rex ids to the Hermes config.yaml")
 
 
 def _passthrough_names() -> set[str]:
@@ -544,9 +545,9 @@ def _doctor(args=None) -> int:
         missing = [n for n in _REX_ENV if n not in _passthrough_names()]
     check(not missing, "terminal.client_env_passthrough forwards the Rex ids (exact mode)" if not missing
           else "terminal.client_env_passthrough does not forward " + ", ".join(missing) + " (fallback mode)",
-          "" if not missing else "optional; run `hermes rex doctor --fix` or add to ~/.hermes/config.yaml:\n"
+          "" if not missing else "optional; run `hermes rex doctor --fix` or add to " + _CONFIG + ":\n"
           + "      terminal:\n    " + _PASSTHROUGH_LINE)
-    pid_file = os.path.expanduser("~/.hermes/gateway.pid")
+    pid_file = os.path.join(_HERMES_HOME, "gateway.pid")
     check(os.path.exists(pid_file), "Gateway daemon running" if os.path.exists(pid_file)
           else "Gateway daemon not running", "" if os.path.exists(pid_file) else "hermes gateway status")
     check(os.path.exists(_SKILL), "rex skill registered (rex:rex)" if os.path.exists(_SKILL)
