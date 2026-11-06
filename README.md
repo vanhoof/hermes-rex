@@ -19,7 +19,7 @@ When Hermes runs inside a Rex pane it:
 
 ## Requirements
 
-Hermes Agent 0.22.2 or newer (tested on 0.23.0) and Rex on macOS. Zero-config
+Hermes Agent 0.22.2 or newer (tested on 0.22.2 and 0.23.0) and Rex on macOS. Zero-config
 mode works from 0.21.4; exact mode needs the `terminal.client_env_passthrough`
 setting, which arrived in 0.22.2.
 

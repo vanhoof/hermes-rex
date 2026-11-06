@@ -4,7 +4,7 @@ description: Make Hermes Rex-aware. Reports the agent's state to the Rex termina
 author: Chris van Hoof
 kind: standalone
 manifest_version: 2
-requires_hermes: ">=0.22.2"  # exact mode needs terminal.client_env_passthrough (0.22.2+); tested on 0.23.0
+requires_hermes: ">=0.22.2"  # exact mode needs terminal.client_env_passthrough (0.22.2+); tested on 0.22.2 and 0.23.0
 provides_hooks:
   - on_session_start
   - on_session_reset
