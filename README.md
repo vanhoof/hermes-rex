@@ -116,9 +116,18 @@ and `ps` (tty of a pid). No network access. No credentials read.
 
 ## Upstream
 
-- hermes-agent #138147 / PR #138152: native OSC 7501 for the classic CLI. When
-  it ships, this plugin should stand down for CLI sessions.
-- hermes-agent #141194, #146211: client environment for plugins.
+Hermes work that affects this plugin, worth watching (all open as of 2026-11-05):
+
+| Hermes issue or PR | What it means here |
+|---|---|
+| [#138147 Support OSC 7501 Program Status Protocol in the CLI/TUI](https://github.com/NousResearch/hermes-agent/issues/138147) | Native status reporting. When it ships, this plugin should stand down for the surfaces Hermes covers itself. |
+| [PR #138152 feat(cli): report program status over OSC 7501](https://github.com/NousResearch/hermes-agent/pull/138152) | The classic-CLI implementation of the above, behind a `terminal.program_status` setting. |
+| [#141194 Document/expose the session-bound client env to plugins](https://github.com/NousResearch/hermes-agent/issues/141194) | Would replace the one private import (`bound_client_env`) with a supported API. |
+| [#146211 Gateway sessions forward a hand-written env allowlist](https://github.com/NousResearch/hermes-agent/issues/146211) | If REX_* were forwarded by default, exact mode would need no config line at all. |
+| [PR #148669 fix(herdr): report durable session identity from terminal clients](https://github.com/NousResearch/hermes-agent/pull/148669) | The maintainers' direction for terminal integrations: report from the process that owns the tty. |
+| [PR #149627 feat(tui): report the terminal tool's cwd with OSC 7](https://github.com/NousResearch/hermes-agent/pull/149627) | Pane-side escape output from the TUI; a template for a TUI port of #138152. |
+
+`scripts/upstream-status.sh` prints the current state of each (needs the `gh` CLI).
 
 ## License
 
