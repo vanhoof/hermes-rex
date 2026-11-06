@@ -1,0 +1,35 @@
+name: rex
+version: "0.1.0"
+description: Make Hermes Rex-aware. Reports the agent's state to the Rex terminal (tab spinner, blocked and done indicators, notifications), tells the model which Rex session and pane it runs in, and registers the rex skill so it can drive the rex CLI.
+author: Chris van Hoof
+kind: standalone
+manifest_version: 2
+requires_hermes: ">=0.23"
+provides_hooks:
+  - on_session_start
+  - on_session_reset
+  - pre_llm_call
+  - pre_tool_call
+  - post_tool_call
+  - pre_approval_request
+  - post_approval_response
+  - on_human_input_request
+  - on_human_input_resolved
+  - post_llm_call
+  - on_session_end
+  - agent_loop_stopped
+  - subagent_start
+  - subagent_stop
+platforms:
+  - macos
+  - linux
+config_schema:
+  session_naming: {type: bool, default: false, label: "Session naming", description: "Let the model rename the Rex session after its task"}
+  app_label: {type: str, default: "hermes", label: "App label", description: "The app id in Rex status reports"}
+  debug: {type: bool, default: false, label: "Debug log", description: "Write a hook trace to the plugin data directory"}
+license: MIT
+homepage: https://github.com/vanhoof/hermes-rex
+tags:
+  - rex
+  - terminal
+  - status

@@ -1,0 +1,26 @@
+# Draft catalog entry for NousResearch/hermes-agent/plugin-catalog (submit by PR once published).
+name: rex
+title: Rex terminal integration
+repo: https://github.com/vanhoof/hermes-rex
+sha: 0000000000000000000000000000000000000000  # pin to a 40-hex commit before submitting
+version: "0.1.0"
+description: >
+  Makes Hermes aware of the Rex terminal. Reports the agent's state to Rex over the
+  Program Status Protocol (OSC 7501), tells the model which Rex session and pane it
+  runs in, and registers the rex skill so it can drive the rex CLI. Runs the rex and
+  ps commands as subprocesses; no network access; no credentials read.
+maintainer: vanhoof
+tier: community
+category: terminal
+requires_hermes: ">=0.23"
+platforms: [macos, linux]
+capabilities:
+  provides_hooks: [on_session_start, on_session_reset, pre_llm_call, pre_tool_call, post_tool_call,
+                   pre_approval_request, post_approval_response, on_human_input_request,
+                   on_human_input_resolved, post_llm_call, on_session_end, agent_loop_stopped,
+                   subagent_start, subagent_stop]
+known_issues:
+  - Optional exact mode (terminal.client_env_passthrough with the REX_* names, added by
+    `hermes rex doctor --fix`) freezes ids at session create (hermes-agent #146211).
+  - Reads agent.session_client_env.bound_client_env for exact mode (private seam, hermes-agent #141194).
+  - Fallback mode reads the Rex ids from the environment of the user's own pane processes via ps.
