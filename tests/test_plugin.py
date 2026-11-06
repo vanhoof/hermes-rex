@@ -75,6 +75,29 @@ class Helpers(unittest.TestCase):
         self.assertEqual(env["REX_BIN_DIR"], "/Users/me/Library/Application Support/Rex Server.app/Contents/MacOS")
         self.assertEqual(plugin.parse_rex_env("no rex here"), {})
 
+    def test_process_env_reads_proc_on_linux_layout(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            # emulate /proc/<pid>/environ by pointing the function at a fake pid path
+            fake = os.path.join(d, "environ")
+            with open(fake, "wb") as f:
+                f.write(b"HOME=/home/me\0REX_BLOCK=block:1\0REX_SESSION=session:2\0X=y")
+            real_exists, real_open = os.path.exists, open
+            def fake_exists(p): return p == "/proc/4242/environ" or real_exists(p)
+            def fake_open(p, *a, **k): return real_open(fake if p == "/proc/4242/environ" else p, *a, **k)
+            plugin.os.path.exists = fake_exists
+            try:
+                import builtins
+                builtins_open = builtins.open
+                builtins.open = fake_open
+                try:
+                    env = plugin.process_env("4242", ("REX_BLOCK", "REX_SESSION"))
+                finally:
+                    builtins.open = builtins_open
+            finally:
+                plugin.os.path.exists = real_exists
+        self.assertEqual(env, {"REX_BLOCK": "block:1", "REX_SESSION": "session:2"})
+
     def test_active_session_file(self):
         self.assertEqual(plugin.parse_active_session_file('{"session_id":"local-abc"}'), "local-abc")
         self.assertIsNone(plugin.parse_active_session_file('{"session_id":""}'))

@@ -198,6 +198,32 @@ def parse_rex_env(ps_command_line: str) -> dict:
     return env
 
 
+def process_env(pid: str, wanted: tuple[str, ...]) -> dict:
+    """Selected environment variables of one of the user's own processes.
+    Linux: /proc/<pid>/environ (exact, NUL-separated). macOS/BSD: ``ps -E``, parsed."""
+    proc = f"/proc/{pid}/environ"
+    if os.path.exists(proc):
+        try:
+            with open(proc, "rb") as f:
+                items = f.read().split(b"\0")
+            env = {}
+            for item in items:
+                k, sep, v = item.partition(b"=")
+                if sep and k.decode(errors="replace") in wanted:
+                    env[k.decode()] = v.decode(errors="replace")
+            return env
+        except OSError:
+            return {}
+    line = _run(["ps", "-o", "command=", "-E", "-p", str(pid)])
+    env = parse_rex_env(line)
+    for name in wanted:
+        if name not in env and not name.startswith("REX_"):
+            m = re.search(re.escape(name) + r"=(\S+)", line)
+            if m:
+                env[name] = m.group(1)
+    return {k: v for k, v in env.items() if k in wanted}
+
+
 def _pane_env_for_tty(tty: str) -> dict:
     """Rex ids of the pane on ``tty``: every process in a Rex pane inherits REX_SESSION and REX_BLOCK,
     so read them from any process on that tty (own user only). Cached per tty; a miss retries after 10s."""
@@ -206,7 +232,7 @@ def _pane_env_for_tty(tty: str) -> dict:
         return cached[0]
     found: dict = {}
     for pid in _run(["ps", "-t", tty.replace("/dev/", ""), "-o", "pid="]).split():
-        env = parse_rex_env(_run(["ps", "-o", "command=", "-E", "-p", pid]))
+        env = process_env(pid, _REX_ENV)
         if env.get("REX_BLOCK") and env.get("REX_SESSION"):
             found = env
             break
@@ -264,8 +290,7 @@ def _tui_sessions() -> dict[str, str]:
         if len(parts) < 3 or _TUI_MARKER not in parts[2] or parts[1] == "??":
             continue
         pid, tty = parts[0], "/dev/" + parts[1]
-        m = re.search(r"HERMES_TUI_ACTIVE_SESSION_FILE=(\S+)", _run(["ps", "-o", "command=", "-E", "-p", pid]))
-        path = m.group(1) if m else None
+        path = process_env(pid, ("HERMES_TUI_ACTIVE_SESSION_FILE",)).get("HERMES_TUI_ACTIVE_SESSION_FILE")
         if not path:
             continue
         try:
